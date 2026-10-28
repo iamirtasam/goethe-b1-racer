@@ -162,10 +162,22 @@ node racer.js --url=<exam page>        # any country's Goethe B1 page
 node racer.js --tz=6                   # UTC offset the page's advertised times are in
 node racer.js --creds=creds-main.json
 node racer.js --fast | --calm=0        # switch back to aggressive mode (calm is the default)
+node racer.js --cool=60                # 429 cooldown base in seconds (calm default: 30)
 node racer.js --lead=99999             # force TURBO right now (testing)
 node racer.js --prehammer              # experimental: fire proto-booking URLs seconds before opening
 node racer.js --port=9222 --profile=... # custom CDP port / Brave profile (normal usage: leave defaults)
 ```
+
+**Race-day rules (the 04.09 lesson)**
+
+- The bot enters **calm mode by default**: patient gate retries whose gap grows 1.5s → ~4s,
+  never hammering — an IP that trips Akamai's limit gets blind for ~30 minutes while
+  the seats drain.
+- If you ever see `HTTP 429` twice, that exit IP is burned: **start a second racer on
+  another IP** (`--proxy=proxy-2.json --port=9223 --profile=... --relay=3129 --creds=...`)
+  and give the first one `--cool=60`.
+- Timing now comes from the v3 API's own UTC stamps (`bookFromStamp`) — no timezone
+  guessing — with the old text-time path as fallback (`--tz` only matters there).
 
 **Running a second racer for a friend on the same machine**
 

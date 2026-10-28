@@ -115,7 +115,7 @@ async function ensureBrowser() {
         await page.goto(EXAM_URL, { waitUntil: 'load', timeout: 60000 }).catch(() => {});
         try { await page.getByText('Accept All', { exact: true }).first().click({ timeout: 3000 }); } catch (e) {}
         for (let w = 0; w < 12 && !finderUrls.length; w++) {
-          finderUrls = await page.evaluate(() => [...new Set(performance.getEntriesByType('resource').map(r => r.name).filter(u => u.includes('/rest/examfinder/')))]).catch(() => []);
+          finderUrls = await page.evaluate(() => [...new Set(performance.getEntriesByType('resource').map(r => r.name).filter(u => u.includes('/rest/examfinder')))]).catch(() => []);
           if (!finderUrls.length) await sleep(1500);
         }
         if (!finderUrls.length) { log('!! no finder API - reloading in a minute'); await sleep(60000); continue; }

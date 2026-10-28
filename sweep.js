@@ -40,7 +40,7 @@ const COUNTRIES = [
       await page.goto(`https://www.goethe.de/ins/${cc}/en/spr/prf/gzb1.cfm`, { waitUntil: 'load', timeout: 45000 });
       let finders = [];
       for (let w = 0; w < 8 && !finders.length; w++) {
-        finders = await page.evaluate(() => [...new Set(performance.getEntriesByType('resource').map(r => r.name).filter(u => u.includes('/rest/examfinder/')))]).catch(() => []);
+        finders = await page.evaluate(() => [...new Set(performance.getEntriesByType('resource').map(r => r.name).filter(u => u.includes('/rest/examfinder')))]).catch(() => []);
         if (!finders.length) await sleep(1200);
       }
       if (!finders.length) { console.log(`${name.padEnd(22)} - no exam list on the page`); continue; }

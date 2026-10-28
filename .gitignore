@@ -19,6 +19,7 @@ new/
 recorder.json
 psp_dump.html
 .JSONL/
+research/site/
 
 # --- editor / agent dirs ---
 .claude/

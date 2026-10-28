@@ -85,7 +85,7 @@ function stats(a) {
   await page.goto('https://www.goethe.de/ins/pk/en/spr/prf/gzb1.cfm', { waitUntil: 'load', timeout: 60000 });
   try { await page.getByText('Accept All', { exact: true }).first().click({ timeout: 3000 }); } catch (e) {}
   let finderUrl = await page.evaluate(() => {
-    const urls = performance.getEntriesByType('resource').map(r => r.name).filter(u => u.includes('/rest/examfinder/'));
+    const urls = performance.getEntriesByType('resource').map(r => r.name).filter(u => u.includes('/rest/examfinder'));
     return urls[urls.length - 1] || null;
   });
   // Fallback: the Pakistan B1 finder URL (known from earlier captures). Works

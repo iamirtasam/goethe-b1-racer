@@ -47,6 +47,9 @@ const CONFIG = {
   // to detect, but does not get locked out. The watcher launches racers in
   // calm mode by default. --fast restores the old aggressive behavior.
   CALM: args.calm !== undefined ? !!args.calm : !args.fast,
+  // base 429 cooldown (calm mode): race-day forensics showed the ban lasted
+  // 27+ minutes, so short pauses only kept poking a banned IP. --cool=60 slows further.
+  COOL_SEC: Number(args.cool || 30),
   // stop before the final ORDER click
   DRY_RUN: !!args.dry,
   HOLD_SEC: Number(args.hold || 0),   // --hold=120: at review, hold the seat N sec (experiment)
@@ -214,7 +217,7 @@ async function connectBrave() {
 async function getFinderUrls(page) {
   return await page.evaluate(() => {
     const urls = [...new Set(performance.getEntriesByType('resource')
-      .map(r => r.name).filter(u => u.includes('/rest/examfinder/')))];
+      .map(r => r.name).filter(u => u.includes('/rest/examfinder')))];
     // prefer the URLs that carry the page's own country code, if any
     return urls;
   });
@@ -253,19 +256,39 @@ async function fetchRows(page, finderUrls) {
 }
 
 function parseRows(rows) {
-  return rows.map(ex => ({
-    location: String(ex.locationName || '').trim(),
-    span: String(ex.eventTimeSpan || '').replace(/\s+/g, ' ').trim(),
-    bookFrom: ex.bookFrom, bookFromTime: ex.bookFromTime,
-    disabled: !!(ex.buttonDisabled && String(ex.buttonDisabled).trim()),
-    link: ex.buttonLink || '', oid: ex.oid,
-    moduleId: ex.moduleId, acadYear: ex.acadYear, acadPeriod: ex.acadPeriod,
-    src: ex.__src,
-  }));
+  return rows.map(ex => {
+    const oid = ex.oid ? String(ex.oid).trim() : '';
+    // v2 rows carry buttonLink (prod-form; the site's script swaps in the oid).
+    // v3 rows open with the oid but an EMPTY buttonLink - so build the exact
+    // entry URL the site itself opens (coe?lang=en&oid=...) in that case.
+    let link = ex.buttonLink || '';
+    if (!link && oid) link = 'https://www.goethe.de/coe?lang=en&oid=' + encodeURIComponent(oid);
+    return {
+      location: String(ex.locationName || '').trim(),
+      span: String(ex.eventTimeSpan || '').replace(/\s+/g, ' ').trim(),
+      bookFrom: ex.bookFrom, bookFromTime: ex.bookFromTime,
+      bookFromStamp: ex.bookFromStamp,           // v3: UTC stamp of the opening instant
+      availability: ex.availability,             // 1 open · 2 fully booked · 11 bookable-from<future>
+      encOID: ex.encOID || '',                   // v3: 128-hex token, present even while locked
+      disabled: !!(ex.buttonDisabled && String(ex.buttonDisabled).trim()) || (!oid && ex.availability !== 1),
+      link, oid,
+      moduleId: ex.moduleId, acadYear: ex.acadYear, acadPeriod: ex.acadPeriod,
+      src: ex.__src,
+    };
+  });
 }
 
 function parseOpenAt(row) {
-  if (!row || !row.bookFrom) return null;
+  if (!row) return null;
+  // v3 rows carry the opening moment as a UTC stamp - trust it over the
+  // text fields. The 04.09 race saw bookFromTime silently flip from
+  // 11:12 (PKT) to 07:12 (CMS timezone) mid-race, so the text path is only a fallback.
+  const stamp = row.bookFromStamp;
+  if (stamp) {
+    const t = /^\d{12,13}$/.test(String(stamp)) ? Number(stamp) : Date.parse(stamp);
+    if (!isNaN(t)) return new Date(t);
+  }
+  if (!row.bookFrom) return null;
   const d = String(row.bookFrom).match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
   if (!d) return null;
   const t = String(row.bookFromTime || '00:00').match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
@@ -1011,17 +1034,22 @@ async function attemptBooking(page, exam, ctx) {
   log(`[${el()}] RACE START: ${url.substring(0, 90)}`);
   ev('race_start', { url });
 
-  // ---- GATE: the entry request. This is the race. While the site says
-  // "very high demand" or rate-limits, hammer it: every ~700ms, with a fresh
-  // booking session cookie each time. The first one that lands inside the
-  // options page has the seat. Keep this up for MINUTES if needed - seats
-  // are released constantly as other people's sessions time out.
-  const GATE_MS = 8 * 60 * 1000; // keep hammering up to 8 minutes
+  // ---- GATE: the entry request. This is the race. Every retry is a fresh
+  // lottery ticket as other people's sessions time out. The 04.09 lesson
+  // decides the pacing: our IP tripped Akamai's limit ~10s after the flip
+  // (hammering at 0.7s) and stayed blind for 28 MINUTES while the seats
+  // stayed open - so calm mode starts patient and ESCALATES the gap, and a
+  // real 429 gets a long cooldown plus a loud "switch IP" call-out.
+  const GATE_MS = 8 * 60 * 1000; // keep retrying up to 8 minutes
   const gateStart = Date.now();
-  let html = '', finalUrl = '', status = 0, gateErr = false, gate429 = 0;
+  let html = '', finalUrl = '', status = 0, gateErr = false, gate429 = 0, gateTry = 0;
+  // calm: 1.5s -> ~4s cap (each retry still a fresh ticket, but the IP stays
+  // under Akamai's radar); fast: the old 0.7s hammer
+  const gapFor = () => (CONFIG.CALM ? Math.min(1500 + gateTry * 250, 4000) : 700);
 
   while (Date.now() - gateStart < GATE_MS) {
     const r = await fetchPage(page, url);
+    gateTry++;
     status = r.status; html = r.html || ''; finalUrl = r.finalUrl;
     if (r.err) { gateErr = true; break; }              // login-site redirect
     if (/\/coe\/(options|entry)/.test(finalUrl) && /navSection-nextLink|moduleDetailsPanel/.test(html)) break;
@@ -1039,25 +1067,28 @@ async function attemptBooking(page, exam, ctx) {
     // block, never treat it as a dead session.
     if (/\/coe\/wicket\/page/.test(finalUrl) || /high traffic|very high demand|sehr hohe nachfrage|hohe auslastung/i.test(html)) {
       const n = Math.floor((Date.now() - gateStart) / 1000);
-      if (n < 30 || n % 10 === 0) log(`[${el()}] gate: high-traffic interstitial (try ${Math.floor((Date.now() - gateStart) / (CONFIG.CALM ? 1500 : 700))}) - retrying...`);
-      await sleep(CONFIG.CALM ? 1500 : 700);
+      if (n < 30 || n % 10 === 0) log(`[${el()}] gate: high-traffic interstitial (try #${gateTry}) - retrying in ${Math.round(gapFor() / 100) / 10}s...`);
+      await sleep(gapFor());
       continue;
     }
     if (/cannot be booked at the moment/i.test(html)) {
-      // Normal contention response at a real opening - this is exactly the
-      // moment to hammer: every retry is a fresh chance as other sessions die.
+      // Normal contention response at a real opening - retry patiently:
+      // each retry is a fresh chance as other sessions die.
       const n = Math.floor((Date.now() - gateStart) / 1000);
-      if (n < 30 || n % 10 === 0) log(`[${el()}] gate: demand-blocked (try ${Math.floor((Date.now() - gateStart) / (CONFIG.CALM ? 1500 : 700))}), ${CONFIG.CALM ? 'retrying patiently' : 'hammering'}...`);
-      await sleep(CONFIG.CALM ? 1500 : 700);
+      if (n < 30 || n % 10 === 0) log(`[${el()}] gate: demand-blocked (try #${gateTry}) - ${CONFIG.CALM ? 'retrying patiently' : 'hammering'}...`);
+      await sleep(gapFor());
       continue;
     }
     if (status === 429 || /Too Many Requests/i.test(html)) {
-      // A REAL rate limit: hammering now would extend the block (that is
-      // what killed the old bot). Pause longer each time.
+      // A REAL rate limit: re-probing fast only extends the block - on 04.09
+      // the IP was banned 27+ minutes while the seats were still open ~20.
+      // Long cooldowns instead; at hit 2 call the exit IP burned so a second
+      // racer on another IP (--proxy=proxy-2.json) can take over.
       gate429 = Math.min(gate429 + 1, 6);
-      const pause = 2000 * gate429;
-      log(`[${el()}] gate: HTTP 429 rate-limited - pausing ${Math.round(pause / 1000)}s (hit ${gate429}x) instead of hammering.`);
-      ev('gate_429', { hits: gate429, pauseMs: pause });
+      const pause = Math.min(gate429 * (CONFIG.CALM ? CONFIG.COOL_SEC : 2) * 1000, 90000);
+      if (gate429 === 2) log(`[${el()}] !! gate: still rate-limited at ${Math.round((Date.now() - gateStart) / 1000)}s in - this exit IP looks BANNED. Start the second racer on another IP NOW (and give this one --cool=60).`);
+      log(`[${el()}] gate: HTTP 429 - cooling down ${Math.round(pause / 1000)}s (hit ${gate429}x).`);
+      ev('gate_429', { hits: gate429, pauseMs: pause, likely_banned: gate429 >= 2 });
       await sleep(pause);
       continue;
     }

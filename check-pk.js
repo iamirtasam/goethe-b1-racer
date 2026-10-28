@@ -31,7 +31,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   try { await page.getByText('Accept All', { exact: true }).first().click({ timeout: 3000 }); } catch (e) {}
   let finderUrls = [];
   for (let w = 0; w < 12 && !finderUrls.length; w++) {
-    finderUrls = await page.evaluate(() => [...new Set(performance.getEntriesByType('resource').map(r => r.name).filter(u => u.includes('/rest/examfinder/')))]).catch(() => []);
+    finderUrls = await page.evaluate(() => [...new Set(performance.getEntriesByType('resource').map(r => r.name).filter(u => u.includes('/rest/examfinder')))]).catch(() => []);
     if (!finderUrls.length) await sleep(1500);
   }
   const rows = await page.evaluate(async (urls) => {
