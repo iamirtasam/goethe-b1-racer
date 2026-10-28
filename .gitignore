@@ -1,0 +1,28 @@
+# --- secrets: never commit ---
+creds*.json
+proxy*.json
+!creds.example.json
+!proxy.example.json
+
+# --- local state: browser profiles (cookies, sessions, Akamai clearance) ---
+brave-profile/
+watcher-profile/
+*-profile/
+
+# --- dependencies ---
+node_modules/
+
+# --- logs / forensic dumps / scratch files ---
+*.log
+*.jsonl
+new/
+recorder.json
+psp_dump.html
+.JSONL/
+
+# --- editor / agent dirs ---
+.claude/
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini

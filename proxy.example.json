@@ -1,0 +1,6 @@
+{
+  "host": "your.residential.proxy.host",
+  "port": 8080,
+  "user": "proxy-username",
+  "pass": "proxy-password"
+}
