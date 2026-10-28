@@ -1,12 +1,20 @@
 {
-  "name": "goethe",
+  "name": "goethe-b1-racer",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Watch + race Goethe-Institut B1 exam seats worldwide the instant they open, and drive the whole booking (Playwright driving a real Brave browser)",
+  "main": "racer.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "race": "node racer.js",
+    "watch": "node watcher.js",
+    "test": "echo \"no automated tests; use: node racer.js --dry\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "goethe-institut",
+    "exam-booking",
+    "seat-watcher",
+    "playwright",
+    "automation"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
