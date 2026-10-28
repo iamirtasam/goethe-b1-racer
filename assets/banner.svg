@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-label="Goethe B1 Racer">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070b18"/><stop offset="0.6" stop-color="#140f33"/><stop offset="1" stop-color="#1d1145"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee"/><stop offset="0.5" stop-color="#7c5cff"/><stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+    <pattern id="chk" width="32" height="32" patternUnits="userSpaceOnUse">
+      <rect width="16" height="16" fill="#fff"/><rect x="16" y="16" width="16" height="16" fill="#fff"/>
+    </pattern>
+    <clipPath id="r"><rect width="1200" height="320" rx="20"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)">
+    <rect width="1200" height="320" fill="url(#bg)"/>
+    <!-- speed lines -->
+    <g stroke="url(#acc)" stroke-linecap="round" fill="none">
+      <line x1="0" y1="70"  x2="1200" y2="70"  stroke-width="2" opacity=".35" stroke-dasharray="140 90 30 260"><animate attributeName="stroke-dashoffset" from="0" to="-520" dur="3.2s" repeatCount="indefinite"/></line>
+      <line x1="0" y1="110" x2="1200" y2="110" stroke-width="3" opacity=".25" stroke-dasharray="80 200 220 60"><animate attributeName="stroke-dashoffset" from="0" to="-560" dur="2.4s" repeatCount="indefinite"/></line>
+      <line x1="0" y1="215" x2="1200" y2="215" stroke-width="2" opacity=".3"  stroke-dasharray="200 120 40 140"><animate attributeName="stroke-dashoffset" from="0" to="-500" dur="2.9s" repeatCount="indefinite"/></line>
+      <line x1="0" y1="250" x2="1200" y2="250" stroke-width="3" opacity=".22" stroke-dasharray="60 240 160 80"><animate attributeName="stroke-dashoffset" from="0" to="-540" dur="3.8s" repeatCount="indefinite"/></line>
+    </g>
+    <!-- checkered strips -->
+    <rect y="0" width="1200" height="16" fill="url(#chk)" opacity=".16"/>
+    <rect y="304" width="1200" height="16" fill="url(#chk)" opacity=".16"/>
+    <!-- icon tile -->
+    <g transform="translate(70,88)">
+      <rect width="144" height="144" rx="30" fill="#0b1226" stroke="url(#acc)" stroke-width="3"/>
+      <g transform="translate(32,32) scale(3.33)" fill="none" stroke="url(#acc)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+      </g>
+    </g>
+    <!-- text -->
+    <text x="250" y="150" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="74" font-weight="800" letter-spacing="3" fill="#f8fafc">GOETHE <tspan fill="url(#acc)">B1</tspan> RACER</text>
+    <rect x="254" y="168" width="170" height="5" rx="2.5" fill="url(#acc)"/>
+    <text x="252" y="212" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="26" fill="#c7d2fe">Grab a Goethe-Institut B1 exam seat the second it opens.</text>
+    <text x="252" y="256" font-family="Consolas, Menlo, monospace" font-size="16" letter-spacing="3" fill="#94a3b8">SEAT WATCHER  /  BOOKING BOT  /  FORENSIC RACE LOGS</text>
+  </g>
+</svg>

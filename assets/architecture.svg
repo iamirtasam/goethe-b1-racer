@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="540" viewBox="0 0 1200 540" role="img" aria-label="Architecture diagram">
+  <defs>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#7c5cff"/></linearGradient>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7c5cff"/></marker>
+  </defs>
+  <style>
+    .t{font-family:Segoe UI,Helvetica,Arial,sans-serif;fill:#e2e8f0}
+    .m{font-family:Consolas,Menlo,monospace}
+    .s{font-size:13px;fill:#94a3b8}
+    .h{font-size:20px;font-weight:700}
+    .box{fill:#0d1224;stroke:#3b4678;stroke-width:1.5}
+    .ln{stroke:#7c5cff;stroke-width:2.2;fill:none;marker-end:url(#ah)}
+    .dash{stroke-dasharray:7 5}
+  </style>
+  <rect width="1200" height="540" rx="18" fill="#080c1b"/>
+  <!-- machine -->
+  <rect x="20" y="30" width="790" height="440" rx="18" fill="none" stroke="#2a3358" stroke-width="1.5" stroke-dasharray="3 6"/>
+  <text x="40" y="56" class="t m" font-size="13" letter-spacing="2" fill="#64748b" style="fill:#64748b">MACHINE RUNNING THE BOT</text>
+
+  <!-- watcher -->
+  <rect x="50" y="80" width="280" height="150" rx="14" class="box"/>
+  <rect x="50" y="80" width="280" height="5" rx="2.5" fill="url(#acc)"/>
+  <text x="70" y="115" class="t m h">watcher.js</text><text x="250" y="115" class="t m s">CDP :9224</text>
+  <text x="70" y="148" class="t s">polls exam list every 30 s</text>
+  <text x="70" y="172" class="t s">read-only, never logs in</text>
+  <text x="70" y="196" class="t s">loud alarm: beeps + banner</text>
+
+  <!-- racer -->
+  <rect x="420" y="80" width="300" height="190" rx="14" class="box"/>
+  <rect x="420" y="80" width="300" height="5" rx="2.5" fill="url(#acc)"/>
+  <text x="440" y="115" class="t m h">racer.js</text><text x="640" y="115" class="t m s">CDP :9222</text>
+  <text x="440" y="148" class="t s">polls API 1/s, TURBO, then ULTRA</text>
+  <text x="440" y="172" class="t s">oid appears, fire entry</text>
+  <text x="440" y="196" class="t s">parallel login, walk the chain</text>
+  <text x="440" y="220" class="t s">ORDER, then "WON - CHECK EMAIL"</text>
+
+  <line x1="330" y1="155" x2="418" y2="155" class="ln"/>
+  <text x="374" y="144" class="t s" text-anchor="middle">spawn</text>
+  <text x="374" y="178" class="t s" text-anchor="middle">on OPEN</text>
+
+  <!-- brave -->
+  <rect x="210" y="340" width="300" height="100" rx="14" class="box"/>
+  <text x="230" y="374" class="t h">Real Brave browser</text>
+  <text x="230" y="400" class="t s">in-page fetch, real cookies + fingerprint</text>
+  <text x="230" y="420" class="t s">driven over CDP by Playwright</text>
+  <path d="M190 230 L280 338" class="ln"/>
+  <path d="M570 270 L440 338" class="ln"/>
+
+  <!-- proxyauth -->
+  <rect x="570" y="340" width="210" height="100" rx="14" class="box"/>
+  <text x="588" y="374" class="t m h">proxyauth.js</text>
+  <text x="588" y="400" class="t s">local relay :3128</text>
+  <text x="588" y="420" class="t s">injects proxy auth</text>
+  <line x1="510" y1="390" x2="568" y2="390" class="ln"/>
+
+  <!-- external column -->
+  <rect x="860" y="60" width="300" height="90" rx="14" class="box"/>
+  <text x="880" y="95" class="t m h">goethe.de</text>
+  <text x="880" y="122" class="t s">/rest/examfinder/ + booking chain</text>
+
+  <rect x="860" y="200" width="300" height="90" rx="14" class="box"/>
+  <text x="880" y="235" class="t h">Residential proxy</text>
+  <text x="880" y="262" class="t s">optional, exit IP for the site</text>
+
+  <rect x="860" y="400" width="300" height="80" rx="14" class="box"/>
+  <text x="880" y="435" class="t m h">login.goethe.de</text>
+  <text x="880" y="460" class="t s">DIRECT, bypasses the proxy</text>
+
+  <path d="M780 390 H820 V245 H858" class="ln"/>
+  <line x1="1010" y1="200" x2="1010" y2="152" class="ln"/>
+  <path d="M360 440 V508 H1010 V482" class="ln dash"/>
+  <text x="640" y="526" class="t s" text-anchor="middle">login hop skips the relay to save latency</text>
+</svg>
